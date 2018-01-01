@@ -4,12 +4,9 @@ import {
     Text,
     View,
     ScrollView,
-    TouchableOpacity,
-    StatusBar,
-    Modal,
-    Button,
-    TextInput
+    TouchableOpacity
 } from 'react-native';
+import AddActivityModal from './addActivityModal';
 
 export default class ActivityFeed extends React.Component {
     state = {
@@ -17,7 +14,7 @@ export default class ActivityFeed extends React.Component {
             1: [{
                 name: 'Walking',
                 duration: 20,
-                dateCreated: 'Sun Dec 31 2017 18:16:41 GMT-0600 (CST)'
+                dateCreated: 'Mon Jan 1 2018 00:00:41 GMT-0600 (CST)'
             }, {
                 name: 'Weight Lifting',
                 duration: 60,
@@ -44,92 +41,151 @@ export default class ActivityFeed extends React.Component {
                 dateCreated: 'Sun April 25 2017 10:00:00 GMT-0600 (CST)'
             }],
             2: [{
+                name: 'Weight Lifting',
+                duration: 50,
+                dateCreated: 'Sun Dec 31 2017 12:10:15 GMT-0600 (CST)'
+            }, {
+                name: 'Walking',
+                duration: 10,
+                dateCreated: 'Sun Dec 30 2017 12:16:41 GMT-0600 (CST)'
+            }, {
+                name: 'Walking',
+                duration: 40,
+                dateCreated: 'Mon Jan 1 2018 00:00:41 GMT-0600 (CST)'
+            }, {
+                name: 'Running',
+                duration: 30,
+                dateCreated: 'Sun April 25 2017 10:00:00 GMT-0600 (CST)'
+            }],
+            3: [{
                 name: 'Running',
                 duration: 45,
                 dateCreated: 'Sun Dec 30 2017 10:30:00 GMT-0600 (CST)'
             }, {
                 name: 'Play Tennis',
                 duration: 60,
-                dateCreated: 'Sun Dec 30 2017 08:00:00 GMT-0600 (CST)'
-            }],
+                dateCreated: 'Sun Dec 31 2017 08:00:00 GMT-0600 (CST)'
+            }, {
+                name: 'Weight Lifting',
+                duration: 30,
+                dateCreated: 'Sun Dec 28 2017 10:00:00 GMT-0600 (CST)'
+            }]
         }
     }
-    getDaysFromNow(date) {
-        return Math.ceil((new Date(date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+    static navigationOptions = ({ navigation }) => {
+        return {
+            title: `${navigation.state.params.userName}'s Activity Feed`
+        };
+    }
+
+    getYMD(date) {
+        var d = new Date(date);
+        return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    }
+    getActivityList(userId) {
+        let activityList = {
+            today: {
+                title: 'Today',
+                activities: []
+            },
+            yesterday: {
+                title: 'Yesterday',
+                activities: []
+            },
+            previous: {
+                title: 'Previous Activities',
+                activities: []
+            }
+        }
+        const currentDate = new Date();
+        const today = this.getYMD(currentDate);
+        const yesterday = this.getYMD(new Date(currentDate.setDate(currentDate.getDate() - 1)));
+        const userActivities = this.state.activities[userId];
+
+        // Loop through the activities and add them to the correct list (today, yesterday, previous)
+        if (userActivities) {
+            userActivities.forEach((activity) => {
+                let activityDate = this.getYMD(activity.dateCreated);
+                if (activityDate === today) {
+                    activityList.today.activities.push(activity);
+                } else if (activityDate === yesterday) {
+                    activityList.yesterday.activities.push(activity);
+                } else {
+                    activityList.previous.activities.push(activity);
+                }
+            });
+            return activityList;
+        }
+
+        return false;
     }
     getActivities(userId) {
-        let headerText = '';
-        let rendered = {
-            today: false,
-            yesterday: false,
-            previous: false
-        }
-        const userActivities = this.state.activities[userId];
-        const activities = userActivities.map((activity, i) => {
-            let headerEl = null;
-            if (!rendered.today && this.getDaysFromNow(activity.dateCreated) > -1) {
-                headerText = 'Today';
-                rendered.today = true;
-            } else if (!rendered.yesterday && this.getDaysFromNow(activity.dateCreated) === -1) {
-                headerText = 'Yesterday';
-                rendered.yesterday = true;
-            } else if (!rendered.previous && this.getDaysFromNow(activity.dateCreated) < -1) {
-                headerText = 'Previous Activities';
-                rendered.previous = true;
-            } else {
-                headerText = '';
-            }
+        const userActivityList = this.getActivityList(userId);
+        if (userActivityList) {
+            return Object.keys(userActivityList).map((title, sectionKey) => {
+                let headerEl = null;
+                const section = userActivityList[title];
 
-            if (headerText) {
-                headerEl = <Text style={styles.sectionTitle}>{headerText}</Text>;
-            }
+                if (section.activities.length) {
+                    headerEl = <Text style={styles.sectionTitle}>{section.title}</Text>;
+                }
 
-            return (
-                <View key={i}>
-                    {headerEl}
-                    <View style={styles.list}>
-                        <View style={styles.listRow}>
-                            <Text style={styles.listText}>
-                                {activity.name}
-                            </Text>
-                            <Text style={[styles.transparent, styles.listTextRight]}>
-                                {
-                                    new Date(activity.dateCreated).toLocaleDateString(
-                                        "en-US",
-                                        {
-                                            weekday: undefined,
-                                            year: '2-digit',
-                                            month: 'numeric',
-                                            day: 'numeric'
-                                        }
-                                    )
-                                }
-                            </Text>
+                const activities = section.activities.map((activity, activityKey) => {
+                    return (
+                        <View style={styles.list} key={activityKey}>
+                            <View style={styles.listRow}>
+                                <Text style={styles.listText}>
+                                    {activity.name}
+                                </Text>
+                                <Text style={[styles.transparent, styles.listTextRight]}>
+                                    {
+                                        new Date(activity.dateCreated).toLocaleDateString(
+                                            "en-US",
+                                            {
+                                                weekday: undefined,
+                                                year: '2-digit',
+                                                month: 'numeric',
+                                                day: 'numeric'
+                                            }
+                                        )
+                                    }
+                                </Text>
+                            </View>
+                            <View>
+                                <Text style={[styles.transparent, styles.textMuted]}>
+                                    {activity.duration} Minutes
+                                </Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={[styles.transparent, styles.textMuted]}>
-                                {activity.duration} Minutes
-                            </Text>
-                        </View>
+                    );
+                });
+
+                return (
+                    <View key={sectionKey}>
+                        {headerEl}
+                        {activities}
                     </View>
+                );
+            });
+        } else {
+            return (
+                <View>
+                    <Text style={[styles.textMuted, styles.textNotify]}>
+                        No activities found
+                    </Text>
                 </View>
             );
-        });
-        return (activities);
+        }
     }
     render() {
         const userId = this.props.navigation.state.params.userId;
         const activities = this.getActivities(userId);
         return (
             <View style={styles.bg}>
-                <ScrollView contentContainerStyle={styles.container}>
+                <ScrollView>
                     {activities}
                 </ScrollView>
-                <TouchableOpacity onPress={() => {this.toggleActivityModal(true)}}>
-                    <View style={styles.addButton}>
-                        <Text style={[styles.buttonText, styles.addButtonText]}>Add</Text>
-                    </View>
-                </TouchableOpacity>
+                <AddActivityModal updatePoints={() => {}} />
             </View>
         );
     }
@@ -138,13 +194,14 @@ export default class ActivityFeed extends React.Component {
 const styles = StyleSheet.create({
     bg: {
         flex: 1,
-        backgroundColor: '#f1f1f1'
-    },
-    container: {
         backgroundColor: '#fff'
     },
     textMuted: {
-        color: '#666'
+        color: '#777'
+    },
+    textNotify: {
+        textAlign: 'center',
+        marginTop: 30
     },
     transparent: {
         backgroundColor: 'transparent'
@@ -175,30 +232,5 @@ const styles = StyleSheet.create({
         width: 100,
         marginLeft: 'auto',
         textAlign: 'right'
-    },
-    // Button Styles
-    buttonText: {
-        backgroundColor: 'transparent',
-        fontSize: 18
-    },
-    addButton: {
-        position: 'absolute',
-        alignSelf: 'center',
-        width: 60,
-        height: 60,
-        marginRight: -30,
-        backgroundColor: '#2ca231',
-        borderRadius: 360,
-        alignItems: 'center',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        zIndex: 2,
-        position: 'absolute',
-        bottom: 10,
-        right: '50%'
-    },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: 'bold'
     }
 });

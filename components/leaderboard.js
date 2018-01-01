@@ -10,225 +10,145 @@ import {
     Button,
     TextInput
 } from 'react-native';
+import AddActivityModal from './addActivityModal';
 
 export default class LeaderBoard extends React.Component {
     state = {
-        validationError: false,
-        activityModalVisible: false,
-        activity: {
-            name: null,
-            duration: null,
-            dateCreated: null
-        },
-        myPoints: 100,
-        activities: {
-            1: [{
-                name: 'Walking',
-                duration: 20,
-                dateCreated: 'Sun Dec 31 2017 18:16:41 GMT-0600 (CST)'
-            }, {
-                name: 'Weight Lifting',
-                duration: 60,
-                dateCreated: 'Sun Dec 31 2017 12:10:15 GMT-0600 (CST)'
-            }],
-            2: [{
-                name: 'Running',
-                duration: 45,
-                dateCreated: 'Sun Dec 30 2017 10:30:00 GMT-0600 (CST)'
-            }, {
-                name: 'Play Tennis',
-                duration: 60,
-                dateCreated: 'Sun Dec 30 2017 08:15:00 GMT-0600 (CST)'
-            }],
-        }
+        loggedInUserId: 5,
+        users: [{
+            userId: 1,
+            userName: 'Kunfu Panda',
+            points: 83
+        }, {
+            userId: 2,
+            userName: 'Crouching Tiger',
+            points: 72
+        }, {
+            userId: 3,
+            userName: 'Hidden Dragon',
+            points: 70
+        }, {
+            userId: 4,
+            userName: 'Flying Crane',
+            points: 67
+        }, {
+            userId: 5,
+            userName: 'Praying Mantis',
+            points: 63
+        }, {
+            userId: 6,
+            userName: 'Drunken Master',
+            points: 36
+        }, {
+            userId: 7,
+            userName: 'Morning Glory',
+            points: 45
+        }, {
+            userId: 8,
+            userName: 'Leaping Monkey',
+            points: 60
+        }, {
+            userId: 9,
+            userName: 'Big Bird',
+            points: 58
+        }]
     }
-    toggleActivityModal(visible) {
+    updatePoints(addedPoints) {
+        const updatedUsers = this.state.users.map((user) => {
+            if (user.userId === this.state.loggedInUserId) {
+                user.points += addedPoints;
+            }
+            return user;
+        });
         this.setState({
-            activity: {
-                name: null,
-                duration: null,
-                dateCreated: null
-            },
-            activityModalVisible: visible,
-            validationError: false
+            users: updatedUsers
         });
     }
-    updateActivity(updates) {
-        const activityUpdates = Object.assign({ dateCreated: new Date().toString() }, updates);
-        this.setState({
-            activity: Object.assign(this.state.activity, activityUpdates)
+    getUserGroups() {
+        let userGroups = {
+            leaders: [],
+            others: []
+        };
+        const users = this.state.users.sort((a, b) => {
+            return b.points - a.points;
         });
-    }
-    updateActivityName(name) {
-        this.updateActivity({ name: name });
-    }
-    updateActivityDuration(duration) {
-        this.updateActivity({ duration: duration });
-    }
-    addActivity() {
-        let validationError = (!this.state.activity.name || !this.state.activity.duration);
-
-        // Validate
-        this.setState({
-            validationError: validationError
+        users.forEach((user, key) => {
+            if (key < 3) {
+                userGroups.leaders.push(user);
+            } else {
+                userGroups.others.push(user);
+            }
         });
-
-        if (validationError) {
-            return;
-        }
-
-        // @TODO - If valid, pass to server
-        this.updatePoints();
-
-        // Close the modal
-        this.toggleActivityModal(false);
+        return userGroups;
     }
-    updatePoints() {
-        const currentPoints = this.state.myPoints;
-        const newPoints = Math.round(this.state.activity.duration / 10);
-        this.setState({
-            myPoints: currentPoints + newPoints
+    getUsers() {
+        const userGroups = this.getUserGroups();
+        const { navigate } = this.props.navigation;
+        return Object.keys(userGroups).map((title, key) => {
+            const users = userGroups[title];
+            const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
+            const groupTitle = <Text style={styles.sectionTitle}>{formattedTitle}</Text>;
+            const userRows = users.map((user, position) => {
+                let formattedPosition = title === 'leaders' ? position + 1 : position + 4;
+                let pointsStyle = [styles.points];
+
+                if (formattedPosition === 1) {
+                    pointsStyle.push(styles.pointsGold);
+                } else if (formattedPosition === 2) {
+                    pointsStyle.push(styles.pointsSilver);
+                } else if (formattedPosition === 3) {
+                    pointsStyle.push(styles.pointsBronze);
+                }
+
+                let listRowStyle = [styles.listRow];
+                if (user.userId === this.state.loggedInUserId) {
+                    listRowStyle.push(styles.listRowUser);
+                }
+
+                return (
+                    <TouchableOpacity
+                        key={position}
+                        onPress={() => navigate(
+                            'ActivityFeed',
+                            {
+                                userId: user.userId,
+                                userName: user.userName
+                            })
+                        }
+                    >
+                        <View style={listRowStyle}>
+                            <Text style={styles.number}>#{formattedPosition}</Text>
+                            <View style={styles.listImage}></View>
+                            <Text style={styles.listText}>
+                                {user.userName}
+                            </Text>
+                            <View style={pointsStyle}>
+                                <Text style={styles.transparent}>
+                                    {user.points}
+                                </Text>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                );
+            });
+            return (
+                <View key={key}>
+                    {groupTitle}
+                    {userRows}
+                </View>
+            );
         });
     }
     render() {
-        const { navigate } = this.props.navigation;
-        const validationErrorMessage = this.state.validationError ? (
-            <View style={styles.formFieldWrapper}>
-                <Text style={styles.textError}>All fields are required</Text>
-            </View>
-        ) : null;
         return (
             <View style={styles.bg}>
-                <Modal
-                    animationType={"slide"}
-                    transparent={false}
-                    visible={this.state.activityModalVisible}
-                >
-                    <View style={styles.modalContainer}>
-                        <Text style={[styles.h1, styles.center]}>Add an Activity</Text>
-                        <View style={styles.formFieldWrapper}>
-                            <Text>Activity Name</Text>
-                            <TextInput
-                                style={styles.textField}
-                                value={this.state.activity.name}
-                                onChangeText={(name) => {this.updateActivityName(name)}}
-                            />
-                        </View>
-                        <View style={styles.formFieldWrapper}>
-                            <Text>Duration (Minutes)</Text>
-                            <TextInput
-                                keyboardType="numeric"
-                                style={styles.textField}
-                                value={this.state.activity.duration}
-                                onChangeText={(duration) => {this.updateActivityDuration(duration)}}
-                            />
-                        </View>
-                        {validationErrorMessage}
-                        <View style={styles.formFieldWrapper}>
-                            <TouchableOpacity onPress={() => {this.addActivity()}}>
-                                <View style={[styles.button, styles.buttonSuccess]}>
-                                    <Text
-                                        style={[
-                                            styles.buttonText,
-                                            styles.textWhite
-                                        ]}
-                                    >
-                                        Add
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                            <Button
-                                title="Close"
-                                onPress={() => {this.toggleActivityModal(false)}}
-                            />
-                        </View>
-                    </View>
-                </Modal>
-                <ScrollView contentContainerStyle={styles.container}>
-                    <Text style={styles.sectionTitle}>Leaders</Text>
-                    <TouchableOpacity onPress={() => navigate('ActivityFeed', { userId: 1 })}>
-                        <View style={styles.listRow}>
-                            <Text style={styles.number}>#1</Text>
-                            <View style={styles.listImage}></View>
-                            <Text style={styles.listText}>
-                                Boun Moua
-                            </Text>
-                            <View style={[styles.points, styles.pointsGold]}>
-                                <Text style={styles.transparent}>
-                                    {this.state.myPoints}
-                                </Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigate('ActivityFeed', { userId: 2 })}>
-                        <View style={styles.listRow}>
-                            <Text style={styles.number}>#2</Text>
-                            <View style={styles.listImage}></View>
-                            <Text style={styles.listText}>
-                                Tommy Xiong
-                            </Text>
-                            <View style={[styles.points, styles.pointsSilver]}>
-                                <Text style={styles.transparent}>
-                                    80
-                                </Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                    <View style={styles.listRow}>
-                        <Text style={styles.number}>#3</Text>
-                        <View style={styles.listImage}></View>
-                        <Text style={styles.listText}>
-                            Mai Xiong
-                        </Text>
-                        <View style={[styles.points, styles.pointsBronze]}>
-                            <Text style={styles.transparent}>
-                                60
-                            </Text>
-                        </View>
-                    </View>
-                    <Text style={styles.sectionTitle}>Others</Text>
-                    <View style={styles.listRow}>
-                        <Text style={styles.number}>#4</Text>
-                        <View style={styles.listImage}></View>
-                        <Text style={styles.listText}>
-                            Nalee Xiong
-                        </Text>
-                        <View style={styles.points}>
-                            <Text style={styles.transparent}>
-                                50
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.listRow}>
-                        <Text style={styles.number}>#5</Text>
-                        <View style={styles.listImage}></View>
-                        <Text style={styles.listText}>
-                            Bob Thao
-                        </Text>
-                        <View style={styles.points}>
-                            <Text style={styles.transparent}>
-                                40
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.listRow}>
-                        <Text style={styles.number}>#6</Text>
-                        <View style={styles.listImage}></View>
-                        <Text style={styles.listText}>
-                            Joe Momma
-                        </Text>
-                        <View style={styles.points}>
-                            <Text style={styles.transparent}>
-                                30
-                            </Text>
-                        </View>
-                    </View>
+                <StatusBar barStyle='light-content' />
+                <ScrollView>
+                    {this.getUsers()}
                 </ScrollView>
-                <TouchableOpacity onPress={() => {this.toggleActivityModal(true)}}>
-                    <View style={styles.addButton}>
-                        <Text style={[styles.buttonText, styles.addButtonText]}>Add</Text>
-                    </View>
-                </TouchableOpacity>
+                <AddActivityModal
+                    updatePoints={(addedPoints) => {this.updatePoints(addedPoints)}}
+                />
             </View>
         );
     }
@@ -237,9 +157,6 @@ export default class LeaderBoard extends React.Component {
 const styles = StyleSheet.create({
     bg: {
         flex: 1,
-        backgroundColor: '#f1f1f1'
-    },
-    container: {
         backgroundColor: '#fff'
     },
     textWhite: {
@@ -288,6 +205,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row'
     },
+    listRowUser: {
+        backgroundColor: '#fff7e5'
+    },
     number: {
         width: 23,
         color: '#28659c',
@@ -324,44 +244,5 @@ const styles = StyleSheet.create({
     },
     pointsBronze: {
         backgroundColor: '#d09639',
-    },
-    // Button Styles
-    buttonText: {
-        backgroundColor: 'transparent',
-        fontSize: 18
-    },
-    button: {
-        padding: 10,
-        borderRadius: 5,
-        backgroundColor: '#c6c6c6',
-        alignItems: 'center'
-    },
-    buttonSuccess: {
-        backgroundColor: '#2ca231'
-    },
-    addButton: {
-        position: 'absolute',
-        alignSelf: 'center',
-        width: 60,
-        height: 60,
-        marginRight: -30,
-        backgroundColor: '#2ca231',
-        borderRadius: 360,
-        alignItems: 'center',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        zIndex: 2,
-        position: 'absolute',
-        bottom: 10,
-        right: '50%'
-    },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: 'bold'
-    },
-    // Modals
-    modalContainer: {
-        padding: 10,
-        paddingTop: 34
     }
 });

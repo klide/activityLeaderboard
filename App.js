@@ -1,8 +1,8 @@
 import {
   StackNavigator,
 } from 'react-navigation';
-import LeaderBoard from './components/leaderboard';
-import ActivityFeed from './components/activityfeed';
+import LeaderBoard from './components/leaderBoard';
+import ActivityFeed from './components/activityFeed';
 
 const defaultNavigationOptions = {
     headerStyle: {
@@ -10,22 +10,21 @@ const defaultNavigationOptions = {
     },
     headerTitleStyle: {
         color: '#fff'
-    }
+    },
+    headerTintColor: '#fff'
 }
 
 export default StackNavigator({
-  LeaderBoard: {
-      screen: LeaderBoard,
-      navigationOptions: Object.assign({
-          title: 'Leaderboard',
-      }, defaultNavigationOptions)
-  },
-  ActivityFeed: {
-      screen: ActivityFeed,
-      navigationOptions: Object.assign({
-          title: 'Activity Feed',
-      }, defaultNavigationOptions)
-  },
+    LeaderBoard: {
+        screen: LeaderBoard,
+        navigationOptions: Object.assign({
+            title: 'Leaderboard',
+        }, defaultNavigationOptions)
+    },
+    ActivityFeed: {
+        screen: ActivityFeed,
+        navigationOptions: defaultNavigationOptions
+    },
 }, {
     initialRouteName: 'LeaderBoard'
 });
