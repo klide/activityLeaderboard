@@ -6,51 +6,89 @@ import {
     ScrollView,
     TouchableOpacity,
     StatusBar,
-    Modal,
-    Button,
-    TextInput
+    Image
 } from 'react-native';
+import {
+  StackNavigator,
+  NavigationActions
+} from 'react-navigation';
 import AddActivityModal from './addActivityModal';
+import LeaderBoardList from './leaderBoardList';
+import ActivityFeed from './activityFeed';
+
+const defaultNavigationOptions = {
+    headerStyle: {
+        backgroundColor: '#1f7fbd'
+    },
+    headerTitleStyle: {
+        color: '#fff'
+    },
+    headerTintColor: '#fff'
+}
+
+const LeaderBoardPages = StackNavigator({
+    LeaderBoardList: {
+        screen: LeaderBoardList,
+        navigationOptions: Object.assign({
+            title: 'Leaderboard'
+        }, defaultNavigationOptions)
+    },
+    ActivityFeed: {
+        screen: ActivityFeed,
+        navigationOptions: defaultNavigationOptions
+    },
+}, {
+    initialRouteName: 'LeaderBoardList'
+});
 
 export default class LeaderBoard extends React.Component {
     state = {
         loggedInUserId: 5,
         users: [{
             userId: 1,
-            userName: 'Kunfu Panda',
+            userName: 'Kungfu Panda',
+            photo: '../images/avatar_default.png',
             points: 83
         }, {
             userId: 2,
             userName: 'Crouching Tiger',
+            photo: '../images/avatar_default.png',
             points: 72
         }, {
             userId: 3,
             userName: 'Hidden Dragon',
+            photo: '../images/avatar_default.png',
             points: 70
         }, {
             userId: 4,
             userName: 'Flying Crane',
-            points: 67
+            photo: '../images/avatar_default.png',
+            points: 0
         }, {
             userId: 5,
             userName: 'Praying Mantis',
-            points: 63
+            photo: '../images/avatar_default.png',
+            points: 50
         }, {
             userId: 6,
             userName: 'Drunken Master',
-            points: 36
+            photo: '../images/avatar_default.png',
+            points: 0
         }, {
             userId: 7,
             userName: 'Morning Glory',
-            points: 45
+            photo: '../images/avatar_default.png',
+            points: 0
         }, {
             userId: 8,
             userName: 'Leaping Monkey',
-            points: 60
+            photo: '../images/avatar_default.png',
+            points: 0
         }, {
             userId: 9,
             userName: 'Big Bird',
-            points: 58
+            photo: '../images/avatar_default.png',
+            points: 0
         }]
     }
     updatePoints(addedPoints) {
@@ -64,88 +102,26 @@ export default class LeaderBoard extends React.Component {
             users: updatedUsers
         });
     }
-    getUserGroups() {
-        let userGroups = {
-            leaders: [],
-            others: []
-        };
-        const users = this.state.users.sort((a, b) => {
-            return b.points - a.points;
-        });
-        users.forEach((user, key) => {
-            if (key < 3) {
-                userGroups.leaders.push(user);
-            } else {
-                userGroups.others.push(user);
-            }
-        });
-        return userGroups;
-    }
-    getUsers() {
-        const userGroups = this.getUserGroups();
-        const { navigate } = this.props.navigation;
-        return Object.keys(userGroups).map((title, key) => {
-            const users = userGroups[title];
-            const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
-            const groupTitle = <Text style={styles.sectionTitle}>{formattedTitle}</Text>;
-            const userRows = users.map((user, position) => {
-                let formattedPosition = title === 'leaders' ? position + 1 : position + 4;
-                let pointsStyle = [styles.points];
-
-                if (formattedPosition === 1) {
-                    pointsStyle.push(styles.pointsGold);
-                } else if (formattedPosition === 2) {
-                    pointsStyle.push(styles.pointsSilver);
-                } else if (formattedPosition === 3) {
-                    pointsStyle.push(styles.pointsBronze);
-                }
-
-                let listRowStyle = [styles.listRow];
-                if (user.userId === this.state.loggedInUserId) {
-                    listRowStyle.push(styles.listRowUser);
-                }
-
-                return (
-                    <TouchableOpacity
-                        key={position}
-                        onPress={() => navigate(
-                            'ActivityFeed',
-                            {
-                                userId: user.userId,
-                                userName: user.userName
-                            })
-                        }
-                    >
-                        <View style={listRowStyle}>
-                            <Text style={styles.number}>#{formattedPosition}</Text>
-                            <View style={styles.listImage}></View>
-                            <Text style={styles.listText}>
-                                {user.userName}
-                            </Text>
-                            <View style={pointsStyle}>
-                                <Text style={styles.transparent}>
-                                    {user.points}
-                                </Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                );
-            });
-            return (
-                <View key={key}>
-                    {groupTitle}
-                    {userRows}
-                </View>
-            );
-        });
-    }
     render() {
+        const resetAction = NavigationActions.navigate({
+            routeName: 'LeaderBoard',
+            action: NavigationActions.reset({
+                index: 0,
+                actions: [
+                    NavigationActions.navigate({ routeName: 'LeaderBoardList'})
+                ]
+            })
+        });
+        this.props.navigation.dispatch(resetAction)
         return (
             <View style={styles.bg}>
                 <StatusBar barStyle='light-content' />
-                <ScrollView>
-                    {this.getUsers()}
-                </ScrollView>
+                <LeaderBoardPages
+                    screenProps={{
+                        users: this.state.users,
+                        loggedInUserId: this.state.loggedInUserId
+                    }}
+                />
                 <AddActivityModal
                     updatePoints={(addedPoints) => {this.updatePoints(addedPoints)}}
                 />
@@ -161,6 +137,9 @@ const styles = StyleSheet.create({
     },
     textWhite: {
         color: '#fff'
+    },
+    textMuted: {
+        color: '#777'
     },
     textError: {
         color: '#f34043'
@@ -219,7 +198,7 @@ const styles = StyleSheet.create({
         width: 40,
         marginRight: 10,
         backgroundColor: '#ddd',
-        borderRadius: 360,
+        borderRadius: 20,
     },
     listText: {
         fontSize: 14,
@@ -231,7 +210,7 @@ const styles = StyleSheet.create({
         height: 38,
         width: 38,
         backgroundColor: '#e2e2e2',
-        borderRadius: 360,
+        borderRadius: 19,
         marginLeft: 'auto',
         alignItems: 'center',
         justifyContent: 'center'

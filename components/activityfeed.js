@@ -6,7 +6,6 @@ import {
     ScrollView,
     TouchableOpacity
 } from 'react-native';
-import AddActivityModal from './addActivityModal';
 
 export default class ActivityFeed extends React.Component {
     state = {
@@ -69,6 +68,19 @@ export default class ActivityFeed extends React.Component {
                 name: 'Weight Lifting',
                 duration: 30,
                 dateCreated: 'Sun Dec 28 2017 10:00:00 GMT-0600 (CST)'
+            }],
+            5: [{
+                name: 'Walking',
+                duration: 25,
+                dateCreated: 'Sun Dec 31 2017 10:30:00 GMT-0600 (CST)'
+            }, {
+                name: 'Play Tennis',
+                duration: 40,
+                dateCreated: 'Sun Dec 28 2017 08:00:00 GMT-0600 (CST)'
+            }, {
+                name: 'Ping Pong',
+                duration: 30,
+                dateCreated: 'Sun Dec 25 2017 10:00:00 GMT-0600 (CST)'
             }]
         }
     }
@@ -185,7 +197,6 @@ export default class ActivityFeed extends React.Component {
                 <ScrollView>
                     {activities}
                 </ScrollView>
-                <AddActivityModal updatePoints={() => {}} />
             </View>
         );
     }

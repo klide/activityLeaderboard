@@ -1,30 +1,51 @@
+import React from 'react';
+import {
+    StyleSheet,
+    Image
+} from 'react-native';
 import {
   StackNavigator,
+  TabNavigator
 } from 'react-navigation';
 import LeaderBoard from './components/leaderBoard';
-import ActivityFeed from './components/activityFeed';
+import Challenges from './components/challenges';
 
-const defaultNavigationOptions = {
-    headerStyle: {
-        backgroundColor: '#1f7fbd'
-    },
-    headerTitleStyle: {
-        color: '#fff'
-    },
-    headerTintColor: '#fff'
-}
-
-export default StackNavigator({
+export default TabNavigator({
     LeaderBoard: {
         screen: LeaderBoard,
-        navigationOptions: Object.assign({
-            title: 'Leaderboard',
-        }, defaultNavigationOptions)
+        navigationOptions: {
+            tabBarLabel: 'Leaderboard',
+            tabBarIcon: ({ tintColor }) => (
+                <Image
+                    source={require('./images/icon-leaderboard.png')}
+                    style={styles.icon}
+                />
+            )
+        }
     },
-    ActivityFeed: {
-        screen: ActivityFeed,
-        navigationOptions: defaultNavigationOptions
+    Challenges: {
+        screen: Challenges,
+        navigationOptions: {
+            tabBarLabel: 'Challenges',
+            tabBarIcon: ({ tintColor }) => (
+                <Image
+                    source={require('./images/icon-challenges.png')}
+                    style={styles.icon}
+                />
+            ),
+        }
     },
 }, {
-    initialRouteName: 'LeaderBoard'
+    tabBarPosition: 'bottom',
+    animationEnabled: true,
+    tabBarOptions: {
+        activeTintColor: '#e91e63',
+    }
+});
+
+const styles = StyleSheet.create({
+    icon: {
+        height: 35,
+        width: 35
+    }
 });
